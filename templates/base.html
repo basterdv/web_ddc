@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+{% load static %}
+
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description"
+          content="Управляйте своими финансами с помощью удобного веб-приложения для создания, редактирования, удаления и просмотра записей о движении денежных средств.">
+    <meta name="keywords" content="финансы, управление деньгами, записи о движении денег">
+    <meta name="author" content="LanshakovVG">
+    <title>{{ title }}</title>
+
+    <!-- Custom CSS -->
+    <link href="{% static '/css/styles.css' %}" rel="stylesheet">
+
+    <!-- Bootstrap CSS -->
+    <link href="{% static 'css/bootstrap.min.css' %}" rel="stylesheet">
+
+</head>
+<body class="bg-light">
+
+<!-- Sidebar -->
+<nav class="sidebar">
+    <div class="p-3">
+        <h4 class="mb-4">Управление финансами</h4>
+        <ul class="nav flex-column">
+            <li class="nav-item">
+                <a class="nav-link active" href="/">Главная</a>
+            </li>
+            {% if request.path == '/' %}
+                <li class="nav-item">
+                    <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#editModal">Создать запись</a>
+                </li>
+            {% endif %}
+
+            <li class="nav-item">
+                <a class="nav-link" href="/catalog">Справочники</a>
+            </li>
+        </ul>
+    </div>
+</nav>
+
+
+<!-- Modal -->
+<div class="modal fade" id="editModal" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <span class="close">×</span>
+            <h2>Редактировать запись</h2>
+            <form id="editForm" name="editForm">
+                {% csrf_token %}
+                <input type="hidden" id="cashflow_id" class="form-control" name="cashflow_id">
+                <div class="mb-3">
+                    <label for="editDate" class="form-label">Дата</label>
+                    <input type="date" id="editDate" class="form-control" name="date" required="">
+                </div>
+                <div class="mb-3">
+                    <label for="editStatus" class="form-label">Статус</label>
+                    <select id="editStatus" class="form-select" required="">
+                        {% for status in status_db %}
+                            <option value="{{ status.id }}">{{ status }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label for="editType" class="form-label">Тип</label>
+                    <select id="editType" class="form-select" required="">
+                        {% for type in type_db %}
+                            <option value="{{ type.id }}">{{ type }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label for="editCategory" class="form-label">Категория</label>
+                    <select id="editCategory" class="form-select">
+                        {% for category in category_db %}
+                            <option value="{{ category.id }}">{{ category }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label for="editSubcategory" class="form-label">Подкатегория</label>
+                    <select id="editSubcategory" class="form-select">
+                        <option value="{{ subcategory.id }}"></option>
+                        <!-- Опции подкатегорий будут добавлены динамически с помощью JavaScript -->
+                    </select>
+
+                </div>
+                <div class="mb-3">
+                    <label for="editAmount" class="form-label">Сумма</label>
+                    <input type="number" step="0.01" min="0" max="100" id="editAmount" class="form-control">
+                </div>
+                <div class="mb-3">
+                    <label for="editComment" class="form-label">Комментарий</label>
+                    <textarea id="editComment" class="form-control" rows="3"></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary" form="editForm" id="editForm" name="cash_flow_form">
+                    Сохранить изменения
+                </button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% block content %}{% endblock content %}
+
+<!-- Footer -->
+<footer class="bg-white shadow-sm mt-4 py-3">
+    <div class="container text-center ">
+        © 2025 Управление финансами. Powered by <a href="https://t.me/Basterdv" target="_blank"
+                                                   class="text-primary">LanshakovVG</a>
+    </div>
+</footer>
+
+<!-- Bootstrap JS -->
+<script src="{% static "/js/bootstrap.bundle.min.js" %}"></script>
+
+<!-- Custom JS -->
+<script src="{% static "/js/styles.js" %}"></script>
+<script src="{% static "/js/modal_cashflow.js" %}"></script>
+<script src="{% static "/js/modal_catalog.js" %}"></script>
+</body>
+</html>

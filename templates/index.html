@@ -1,0 +1,192 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <!-- Main Content -->
+    <div class="main-content">
+        <header class="bg-white shadow-sm mb-4">
+            <div class="container py-3">
+                <h1 class="h3 mb-0">Просмотр записей</h1>
+            </div>
+        </header>
+
+        <div class="container">
+            <div class="row">
+                <!-- Фильтры -->
+                <div class="col-12 mb-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="h5 mb-0">Фильтры</h2>
+                        </div>
+                        <div class="card-body">
+                            <form method="get" id="form_filter" name="filter_form">
+                                <div class="row">
+                                    <!-- Поле начальной даты -->
+                                    <div class="col-md-3">
+                                        <label for="filterStartDate" class="form-label">Начальная дата</label>
+                                        <input type="date" id="filterStartDate" name="filterStartDate"
+                                               value="{{ filters.filterStartDate }}"
+                                               class="form-control">
+                                    </div>
+                                    <!-- Поле конечной даты -->
+                                    <div class="col-md-3">
+                                        <label for="filterEndDate" class="form-label">Конечная дата</label>
+                                        <input type="date" id="filterEndDate" name="filterEndDate"
+                                               value="{{ filters.filterEndDate }}"
+                                               class="form-control">
+                                    </div>
+                                    <!-- Выпадающий список статусов -->
+                                    <div class="col-md-2">
+                                        <label for="filterStatus" class="form-label">Статус</label>
+                                        <select id="filterStatus" name="status" class="form-select">
+                                            <option value="status_all">Все</option>
+                                            {% for status in status_db %}
+                                                <option value="{{ status.id }}"
+                                                        {% if filters.status == status.id|stringformat:"s" %}selected{% endif %}>
+                                                    {{ status.name }}
+                                                </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <!-- Выпадающий список типов -->
+                                    <div class="col-md-2">
+                                        <label for="filterType" class="form-label">Тип</label>
+                                        <select id="filterType" name="type" class="form-select">
+                                            <option value="type_all">Все</option>
+                                            {% for type in type_db %}
+                                                <option value="{{ type.id }}"
+                                                        {% if filters.type == type.id|stringformat:"s" %}selected{% endif %}
+                                                >{{ type.name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <!-- Выпадающий список категорий -->
+                                    <div class="col-md-2">
+                                        <label for="category" class="form-label">Категория</label>
+                                        <select id="category" name="category" class="form-select">
+                                            <option value="category_all">Все</option>
+                                            {% for category in category_db %}
+                                                <option value="{{ category.id }}"
+                                                        {% if filters.category == category.id|stringformat:"s" %}selected{% endif %}
+                                                >{{ category.name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="row mt-3">
+                                    <div class="col-md-3">
+                                        <label for="subcategory" class="form-label">Подкатегория</label>
+                                        <select id="subcategory" name="subcategory" class="form-select" disabled>
+                                            <option value="">Сначала выберите категорию</option>
+                                            <!-- Подкатегории будут загружены динамически -->
+                                        </select>
+                                    </div>
+                                    <div class="col-md-8">
+
+                                        <button type="submit" class="btn btn-primary mt-4" name="">Применить
+                                            фильтры
+                                        </button>
+                                        <a href="/" class="btn btn-secondary mt-4">Сбросить фильтр</a>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Скрипт для подкатегории -->
+                <script>
+                    const categorySelect = document.getElementById('category');
+                    const subcategorySelect = document.getElementById('subcategory');
+
+                    categorySelect.addEventListener('change', function () {
+                        const categoryId = this.value;
+
+                        if (!categoryId) {
+                            subcategorySelect.innerHTML = '<option value="">Сначала выберите категорию</option>';
+                            subcategorySelect.disabled = true;
+                            return;
+                        }
+
+                        // Запрос подкатегорий через AJAX
+                        fetch(`/get_subcategories/${categoryId}`)
+                            .then(response => response.json())
+                            .then(data => {
+                                subcategorySelect.innerHTML = '';  // Очищаем список
+
+                                if (data.length === 0) {
+                                    subcategorySelect.innerHTML = '<option value="">Нет подкатегорий</option>';
+                                } else {
+                                    data.forEach(subcategory => {
+                                        const option = document.createElement('option');
+                                        option.value = subcategory.id;
+                                        option.textContent = subcategory.name;
+                                        subcategorySelect.appendChild(option);
+                                    });
+                                }
+
+                                subcategorySelect.disabled = false;
+                            })
+                            .catch(error => {
+                                console.error('Ошибка:', error);
+                                subcategorySelect.innerHTML = '<option value="">Ошибка загрузки</option>';
+                            });
+                    });
+                </script>
+
+                <!-- Таблица записей -->
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="h5 mb-0">Записи о движении денежных средств</h2>
+                        </div>
+                        <div class="card-body">
+                            <table class="table table-striped">
+                                <thead>
+                                <tr>
+                                    <th>Дата</th>
+                                    <th>Статус</th>
+                                    <th>Тип</th>
+                                    <th>Категория</th>
+                                    <th>Подкатегория</th>
+                                    <th>Сумма</th>
+                                    <th>Комментарий</th>
+                                    <th>Действия</th>
+                                </tr>
+                                </thead>
+                                <tbody id="cashflow_db_Table">
+                                {% for cashflow in cashflow_db %}
+                                    <tr>
+                                        <td>{{ cashflow.date | date:"j M Y" }}</td>
+                                        <td>{{ cashflow.status }}</td>
+                                        <td>{{ cashflow.type }}</td>
+                                        <td>{{ cashflow.category }}</td>
+                                        <td>{{ cashflow.subcategory.name }}</td>
+                                        <td>{{ cashflow.sum|floatformat:2 }} .р</td>
+                                        <td>{{ cashflow.comment }}</td>
+
+                                        <!-- кнопки действий -->
+                                        <form method="post">
+                                            {% csrf_token %}
+                                            <td>
+                                                <a class="btn btn-sm btn-primary" href="#" data-bs-toggle="modal"
+                                                   data-bs-target="#editModal" data-cashflow-id="{{ cashflow.id }}">Изменить</a>
+                                                <button class="btn btn-sm btn-danger"
+                                                        name="del_cashflow_form"
+                                                        value="{{ cashflow.id }}">
+                                                    Удалить
+                                                </button>
+                                            </td>
+                                        </form>
+
+                                    </tr>
+                                {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock content %}

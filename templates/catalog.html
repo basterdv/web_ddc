@@ -1,0 +1,259 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <!-- Модальное окно для изменения записи -->
+    <div class="modal fade" id="editModal_catalog" tabindex="-1" role="dialog"
+         aria-labelledby="editModal_catalog"
+         aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <span class="close">×</span>
+                <h2>Редактировать запись</h2>
+                <form method="post" id="editForm_Catalog_Name" name="editForm_Catalog_Name">
+                    {% csrf_token %}
+                    <input type="hidden" id="card_id" class="form-control" name="card_id">
+
+
+                    <div class="mb-3">
+                        <label for="card_name" class="form-label">Наименование</label>
+                        <input type="text" id="card_name" class="form-control" required="">
+
+                        <div class="container" id="typeSection" style="display: none">
+                            <div class="border">
+                                <span>Тип</span>
+                                <select id="TypeSelect" name="typefrocategory" class="form-select">
+                                    {% for type in type_db %}
+                                        <option value="{{ type.id }}"
+                                                {% if filters.type == type.id|stringformat:"s" %}selected{% endif %}
+                                        >{{ type.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+
+                    </div>
+                    <button type="submit" class="btn btn-primary" form="editForm_Catalog_Name"
+                            id="catalog_edit_form"
+                            name="catalog_edit_form">
+                        Сохранить изменения
+                    </button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть
+                    </button>
+
+
+                </form>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <header class="bg-white shadow-sm mb-4">
+            <div class="container py-3">
+                <h1 class="h3 mb-0">Справочники</h1>
+            </div>
+        </header>
+
+        <div class="container">
+            <div class="row mb-4">
+                <!-- Справочник "Статус" -->
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="h5 mb-0">Статус</h2>
+                        </div>
+
+                        <div class="card-body">
+                            <form method="post">
+                                {% csrf_token %}
+                                <ul class="list-group" id="statusList">
+                                    {% for status in status_db %}
+                                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                                            {{ status }}
+                                            <div class="btn-group">
+                                                <a class="btn btn-sm btn-primary" href="#" data-bs-toggle="modal"
+                                                   data-bs-target="#editModal_catalog" data-catalog-type="status"
+                                                   data-catalog-id="{{ status.id }}">Изменить</a>
+                                                <button formaction="/catalog_del/" class="btn btn-sm btn-danger"
+                                                        name="status_del_form"
+                                                        value="{{ status.id }}">Удалить
+                                                </button>
+                                            </div>
+
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            </form>
+
+                            <form id="statusForm" class="mt-3" method="post">
+                                {% csrf_token %}
+                                <div class="input-group">
+                                    <input type="text" name="status_name" id="statusInput" class="form-control"
+                                           placeholder="Новый статус"
+                                           required="">
+                                    <button formaction="/catalog_add/" type="submit" class="btn btn-primary"
+                                            name="status_form">Добавить
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Справочник "Тип" -->
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="h5 mb-0">Тип</h2>
+                        </div>
+                        <div class="card-body">
+                            <form method="post">
+                                {% csrf_token %}
+                                <ul class="list-group" id="typeList">
+                                    {% for type in type_db %}
+                                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                                            {{ type }}
+                                            <div class="btn-group">
+                                                <a class="btn btn-sm btn-primary" href="#" data-bs-toggle="modal"
+                                                   data-bs-target="#editModal_catalog" data-catalog-type="type"
+                                                   data-catalog-id="{{ type.id }}">Изменить</a>
+                                                <button formaction="/catalog_del/" class="btn btn-sm btn-danger"
+                                                        name="type_del_form"
+                                                        value="{{ type.id }}">Удалить
+                                                </button>
+                                            </div>
+
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            </form>
+
+                            <form id="typeForm" class="mt-3" method="post">
+                                {% csrf_token %}
+                                <div class="input-group">
+                                    <input type="text" id="typeInput" name="type_name" class="form-control"
+                                           placeholder="Новый тип"
+                                           required="">
+                                    <button formaction="/catalog_add/" type="submit" name="type_form"
+                                            class="btn btn-primary">Добавить
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Справочник "Категория" с "Подкатегорией" -->
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="h5 mb-0">Категории и Подкатегории</h2>
+                        </div>
+                        <div class="card-body">
+
+                            <form method="post">
+                                {% csrf_token %}
+                                <ul class="list-group" id="categoryList">
+                                    {% for category in category_db %}
+                                        <nav class="navbar bg-body-tertiary ">
+                                            <div class="container-fluid border rounded">
+                                                <span class="navbar-text">
+                                                    <a href="#" class="list-group nav-link active"
+                                                       data-bs-toggle="collapse"
+                                                       data-bs-target="#myCollapsibleList_{{ category.id }}"
+                                                       aria-expanded="false"
+                                                       aria-controls="myCollapsibleList_{{ category.id }}"> {{ category.name }} (Тип: {{ category.types.name }})
+
+                                                </a>
+                                                </span>
+
+                                                <div class="btn-group">
+                                                    <a class="btn btn-sm btn-primary" href="#" data-bs-toggle="modal"
+                                                       data-bs-target="#editModal_catalog" data-catalog-type="category"                                                       
+                                                       data-catalog-id="{{ category.id }}">Изменить</a>
+                                                    <button formaction="/catalog_del/" class="btn btn-sm btn-danger"
+                                                            name="category_del_form"
+                                                            value="{{ category.id }}">
+                                                        Удалить
+                                                    </button>
+                                                </div>
+                                            </div>
+
+                                        </nav>
+                                        <div class="collapse" id="myCollapsibleList_{{ category.id }}">
+                                            <form id="subcategoryForm" method="post">
+                                                {% csrf_token %}
+                                                <ul class="list-group">
+                                                    {% for subcategory in category.subcategories.all %}
+                                                        <li class="list-group-item d-flex justify-content-between align-items-center">
+
+                                                            {{ subcategory.name }}
+                                                            <div class="btn-group">
+                                                                <a class="btn btn-sm btn-primary" href="#"
+                                                                   data-bs-toggle="modal"
+                                                                   data-bs-target="#editModal_catalog"
+                                                                   data-catalog-type="subcategory"
+                                                                   data-catalog-id="{{ subcategory.id }}">Изменить</a>
+                                                                <button formaction="/catalog_del/"
+                                                                        class="btn btn-sm btn-danger"
+                                                                        name="subcategory_del_form"
+                                                                        value="{{ subcategory.id }}">
+                                                                    Удалить
+                                                                </button>
+                                                            </div>
+
+                                                        </li>
+                                                    {% endfor %}
+                                                </ul>
+                                            </form>
+
+                                            <form method="post">
+                                                {% csrf_token %}
+                                                <div class="input-group">
+                                                    <input type="text" name="subcategory_name" id="subcategoryInput"
+                                                           class="form-control"
+                                                           placeholder="Новая подкатегория" required="">
+                                                    <button formaction="/catalog_add/" type="submit"
+                                                            class="btn btn-primary"
+                                                            name="subcategory_form"
+                                                            value="{{ category.id }}">Добавить
+                                                    </button>
+                                                </div>
+                                            </form>
+                                        </div>
+
+                                    {% endfor %}
+                                </ul>
+                            </form>
+                            <div class="container border-5 border-top">
+                                <form id="categoryForm" class="mt-3" method="post">
+                                    {% csrf_token %}
+                                    <div class="input-group mb-3">
+                                        <input type="text" name="category_name" id="categoryInput" class="form-control"
+                                               placeholder="Новая категория" required="">
+
+                                        <select id="TypeSelect" name="typefrocategory" class="form-select">
+                                            {% for type in type_db %}
+                                                <option value="{{ type.id }}"
+                                                        {% if filters.type == type.id|stringformat:"s" %}selected{% endif %}
+                                                >{{ type.name }}</option>
+                                            {% endfor %}
+                                        </select>
+
+                                        <button formaction="/catalog_add/" type="submit" name="category_form"
+                                                value="{{ type.id }}" class="btn btn-primary">Добавить
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+{% endblock content %}
