@@ -7,25 +7,13 @@
 Фильтрации и анализа данных
 Управления справочниками категорий и типов операций
 Технологии
-Backend: Python 3.x, Django, Django REST Framework
-Database: SQLite (по умолчанию) / PostgreSQL
+Backend: Python 3.13, Django, Django REST Framework
+Database: SQLite 
 Frontend: Django Templates, Bootstrap 5
-Дополнительно: Django Filter (для фильтрации), Django Admin (опционально)
+
 Основные функции
 Управление операциями ДДС:
 
-Создание записей с автоматической датой
-Гибкая система статусов (Бизнес, Личное, Налог)
-Разделение на типы операций (Пополнение/Списание)
-Иерархическая категоризация (Категория → Подкатегория)
-Ввод суммы с валидацией
-Необязательные комментарии
-Просмотр и фильтрация:
-
-Табличное представление всех операций
-Фильтры по дате, статусу, типу, категории
-Автоматическая группировка подкатегорий по категориям
-Управление справочниками:
 
 CRUD для статусов, типов, категорий и подкатегорий
 Установление связей между сущностями
@@ -33,39 +21,44 @@ CRUD для статусов, типов, категорий и подкатег
 Требования
 Python 3.8+
 pip
-Инструкция по установке
+
+<h2>Инструкция по установке</h2>
+
 Клонируйте репозиторий:
 
-git clone https://github.com/ваш-аккаунт/web_ddc.git
+```
+git clone https://github.com/basterdv/web_ddc
 cd web_ddc
-CopyInsert
+```
+
 Создайте и активируйте виртуальное окружение:
+```
+    python -m venv venv
+    venv/Scripts/activate
+```
 
-python -m venv venv
-source venv/bin/activate  # Linux/MacOS
-venv\Scripts\activate     # Windows
-CopyInsert
 Установите зависимости:
-
+```
 pip install -r requirements.txt
-CopyInsert
-Примените миграции:
+```
 
+Создаем базу данных и делаем миграцию
+```
+python manage.py makemigrations
 python manage.py migrate
-CopyInsert
+```
+
 Создайте суперпользователя (опционально):
-
+```
 python manage.py createsuperuser
-CopyInsert
+```
+
 Запустите сервер:
-
+```
 python manage.py runserver
-CopyInsert
-Откройте в браузере:
-
 http://localhost:8000/
-CopyInsert
-Структура проекта
+```
+
 
 web_ddc/
 ├── ddc/                  # Основное приложение
@@ -78,7 +71,8 @@ web_ddc/
 ├── manage.py
 ├── requirements.txt
 └── README.md
-CopyInsert
+
+
 Использование
 Главная страница:
 
@@ -92,11 +86,12 @@ CopyInsert
 
 Добавление/редактирование категорий и подкатегорий
 Установление связей между типами и категориями
-Демонстрация
-[Скриншоты интерфейса или ссылка на демо-версию]
 
-Лицензия
-MIT License. Подробнее см. в файле LICENSE.
+Демонстрация
+https://testbackend-baster.amvera.io
+
+
 
 Контакты
-Василий - [ваш email или другие контакты]
+Василий - email    - baster1@list.ru
+        - telegram - https://testbackend-baster.amvera.io
