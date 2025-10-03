@@ -60,19 +60,6 @@ http://localhost:8000/
 ```
 
 
-```
--- мой_проект/
-  ├── .gitignore
-  ├── README.md
-  ├── requirements.txt
-  ├── src/
-  │   ├── __init__.py
-  │   ├── main.py
-  │   └── utils.py
-  └── tests/
-      ├── __init__.py
-      └── test_main.py
-```
 
 Структура проекта
 ```
