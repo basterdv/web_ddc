@@ -1,10 +1,37 @@
 document.addEventListener('DOMContentLoaded', function () {
+    const typeSelect = document.getElementById('editType');
     const categorySelect = document.getElementById('editCategory');
     const subcategorySelect = document.getElementById('editSubcategory');
     const editForm = document.getElementById('editForm');
     const editModal = document.getElementById('editModal');
     const editSubmit = document.getElementById('editSubmit');
     const cashflowIdInput = document.getElementById('cashflow_id');
+
+    // Асинхронная функция для обновления категорий
+    async function updateCategories(typeId) {
+        categorySelect.innerHTML = ''; // Очищаем опции категорий
+        subcategorySelect.innerHTML = ''; // Очищаем опции подкатегорий
+
+        if (typeId) {
+            try {
+                const response = await fetch(`/get_categories_by_type/${typeId}`);
+                const data = await response.json();
+                data.forEach(category => {
+                    const option = document.createElement('option');
+                    option.value = category.id;
+                    option.textContent = category.name;
+                    categorySelect.appendChild(option);
+                });
+
+                // Если категории уже выбраны, обновляем подкатегории
+                if (categorySelect.value) {
+                    updateSubcategories(categorySelect.value);
+                }
+            } catch (error) {
+                console.error('Ошибка при загрузке категорий:', error);
+            }
+        }
+    }
 
     // Асинхронная функция для обновления подкатегорий
     async function updateSubcategories(categoryId) {
@@ -25,12 +52,20 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
+    // Обработчик события изменения типов
+    typeSelect.addEventListener('change', function () {
+        const typeId = this.value;
+        updateCategories(typeId);
+        categorySelect.value = ''; // Очищаем выбор категории
+        subcategorySelect.value = ''; // Очищаем выбор подкатегории
+    });
 
     // Обработчик события изменения категории
     categorySelect.addEventListener('change', function () {
         const categoryId = this.value;
         updateSubcategories(categoryId);
     });
+
 
     // Обработчик события показа модального окна
     editModal.addEventListener('show.bs.modal', async function (event) {

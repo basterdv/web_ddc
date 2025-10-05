@@ -237,6 +237,11 @@ def catalog(request):
 
     return render(request, 'catalog.html', context=context)
 
+def get_categories_by_type(request,typeId):
+    categories = CategoryCatalog.objects.filter(types_id=typeId)
+    categories_list = [{'id': category.id, 'name': category.name} for category in categories]
+    return JsonResponse(categories_list, safe=False)
+
 
 def get_subcategories(request, category_id):
     subcategories = SubCategoryCatalog.objects.filter(category_id=category_id)
