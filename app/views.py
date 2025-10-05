@@ -7,7 +7,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 
 from .models import StatusCatalog, TypeCatalog, CategoryCatalog, SubCategoryCatalog, CashFlow
 
-
+# главная страница
 def index(request):
     # Получение записей из журнала движения денежных средств
     try:
@@ -123,9 +123,9 @@ async def async_update_cashflow(data, status_id, type_id, category_id, subcatego
         comment=data['comment']
     )
 
+
 async def async_delete_cashflow(data):
     await CashFlow.objects.filter(id=data['cashflow_id']).adelete()
-
 
 
 def get_catalog_data():
@@ -171,6 +171,7 @@ def get_catalog_item(catalog_type, card_id):
         print(f'error - {e}')
         return JsonResponse({}, safe=False)
 
+# Добавляем запись
 
 def create_cashflow(request):
     # Парсим данные из тела запроса
@@ -188,7 +189,7 @@ def create_cashflow(request):
 
     return redirect('home')
 
-
+# Редактируем запись
 def update_cashflow(request):
     data = json.loads(request.body)
 
@@ -199,12 +200,12 @@ def update_cashflow(request):
     async def ardit_cashflow():
         await async_update_cashflow(data, status_id, type_id, category_id, subcategory_id)
 
-
     # запускаем асинхронную функцию
     asyncio.run(ardit_cashflow())
 
     return redirect('home')
 
+# Удаляем запись
 async def delete_cashflow(request):
     item_id = request.POST.get('del_cashflow_form')
 
