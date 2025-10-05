@@ -6,23 +6,25 @@ document.addEventListener('DOMContentLoaded', function () {
     const editSubmit = document.getElementById('editSubmit');
     const cashflowIdInput = document.getElementById('cashflow_id');
 
-    // Функция для обновления подкатегорий
-    function updateSubcategories(categoryId) {
+    // Асинхронная функция для обновления подкатегорий
+    async function updateSubcategories(categoryId) {
         subcategorySelect.innerHTML = '';
         if (categoryId) {
-            fetch(`/get_subcategories/${categoryId}`)
-                .then(response => response.json())
-                .then(data => {
-                    data.forEach(subcategory => {
-                        const option = document.createElement('option');
-                        option.value = subcategory.id;
-                        option.textContent = subcategory.name;
-                        subcategorySelect.appendChild(option);
-                    });
-                })
-                .catch(error => console.error('Ошибка при загрузке подкатегорий:', error));
+            try {
+                const response = await fetch(`/get_subcategories/${categoryId}`);
+                const data = await response.json();
+                data.forEach(subcategory => {
+                    const option = document.createElement('option');
+                    option.value = subcategory.id;
+                    option.textContent = subcategory.name;
+                    subcategorySelect.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Ошибка при загрузке подкатегорий:', error);
+            }
         }
     }
+
 
     // Обработчик события изменения категории
     categorySelect.addEventListener('change', function () {
@@ -30,15 +32,8 @@ document.addEventListener('DOMContentLoaded', function () {
         updateSubcategories(categoryId);
     });
 
-    // Обработчик события открытия модального окна
-    // editModal.addEventListener('shown.bs.modal', function () {
-    //     const categoryId = categorySelect.value;
-    //     updateSubcategories(categoryId);
-    // });
-
     // Обработчик события показа модального окна
-    editModal.addEventListener('show.bs.modal', function (event) {
-        // Получаем кнопку, которая открыла модальное окно
+    editModal.addEventListener('show.bs.modal', async function (event) {
         const button = event.relatedTarget;
 
         // Очищаем значения всех полей формы
@@ -46,7 +41,7 @@ document.addEventListener('DOMContentLoaded', function () {
         document.getElementById('editStatus').value = '';
         document.getElementById('editType').value = '';
         document.getElementById('editCategory').value = '';
-        document.getElementById('editSubcategory').innerHTML = ''; // Очищаем опции подкатегорий
+        subcategorySelect.innerHTML = ''; // Очищаем опции подкатегорий
         document.getElementById('editAmount').value = '0';
         document.getElementById('editComment').value = '';
         cashflowIdInput.value = ''; // Очищаем cashflow_id
@@ -62,32 +57,34 @@ document.addEventListener('DOMContentLoaded', function () {
             cashflowIdInput.value = cashflowId;
 
             // Запрашиваем данные записи с сервера
-            fetch(`/get_cashflow/${cashflowId}`)
-                .then(response => response.json())
-                .then(data => {
-                    document.getElementById('editDate').value = data.date;
-                    document.getElementById('editStatus').value = data.status;
-                    document.getElementById('editType').value = data.type;
-                    document.getElementById('editCategory').value = data.category;
-                    document.getElementById('editAmount').value = data.amount;
-                    document.getElementById('editComment').value = data.comment;
-                    document.getElementById('editSubcategory').value=data.subcategory;
+            try {
+                const response = await fetch(`/get_cashflow/${cashflowId}`);
+                const data = await response.json();
 
+                // Обновляем подкатегории для выбранной категории
+                await updateSubcategories(data.category);
 
-                    // Обновляем подкатегории для выбранной категории
-                    updateSubcategories(data.category);
-                    if (data.subcategory) {
-                        document.getElementById('editSubcategory').innerHTML = data.subcategory;
-                    }
-                })
-                .catch(error => console.error('Ошибка при загрузке данных записи:', error));
+                // Устанавливаем значения полей формы
+                document.getElementById('editDate').value = data.date;
+                document.getElementById('editStatus').value = data.status;
+                document.getElementById('editType').value = data.type;
+                document.getElementById('editCategory').value = data.category;
+                document.getElementById('editAmount').value = data.amount;
+                document.getElementById('editComment').value = data.comment;
+
+                // Устанавливаем значение подкатегории после загрузки подкатегорий
+                if (data.subcategory) {
+                    subcategorySelect.value = data.subcategory;
+                }
+            } catch (error) {
+                console.error('Ошибка при загрузке данных записи:', error);
+            }
         }
     });
 
     // Обработчик события отправки формы
     editForm.addEventListener('submit', function (event) {
         event.preventDefault(); // Предотвращаем стандартное поведение формы
-
 
         // Получаем CSRF токен из формы
         const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
@@ -115,7 +112,7 @@ document.addEventListener('DOMContentLoaded', function () {
         };
 
         // Отправляем данные на сервер с использованием Fetch API
-        fetch(cashflow_id ? `/` : '/', {
+        fetch(cashflow_id ? `/update_cashflow/` : '/create_cashflow/', {
             method: cashflow_id ? 'POST' : 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -133,13 +130,8 @@ document.addEventListener('DOMContentLoaded', function () {
             })
             .catch(error => console.error('Ошибка при отправке данных:', error))
             .finally(() => {
-                // Закрываем модальное окно после отправки
-                // const modal = bootstrap.Modal.getInstance(editModal);
-                // modal.hide();
                 // Обновляем страницу после закрытия окна
                 location.reload();
             });
-
     });
-})
-;
+});

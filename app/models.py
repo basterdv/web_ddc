@@ -31,7 +31,7 @@ class TypeCatalog(models.Model):
 class CategoryCatalog(models.Model):
     id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=100)
-    types = models.ForeignKey(TypeCatalog,related_name='categories', on_delete=models.CASCADE)
+    types = models.ForeignKey(TypeCatalog, related_name='categories', on_delete=models.CASCADE)
 
     class Meta:
         db_table = 'category_catalog'
@@ -45,7 +45,7 @@ class CategoryCatalog(models.Model):
 class SubCategoryCatalog(models.Model):
     id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=100)
-    category = models.ForeignKey(CategoryCatalog,related_name='subcategories', on_delete=models.CASCADE)
+    category = models.ForeignKey(CategoryCatalog, related_name='subcategories', on_delete=models.CASCADE)
 
     class Meta:
         db_table = 'sub_category_catalog'
@@ -57,7 +57,7 @@ class CashFlow(models.Model):
     status = models.ForeignKey(StatusCatalog, on_delete=models.CASCADE)
     type = models.ForeignKey(TypeCatalog, on_delete=models.CASCADE)
     category = models.ForeignKey(CategoryCatalog, on_delete=models.CASCADE)
-    subcategory = models.ForeignKey(SubCategoryCatalog, on_delete=models.CASCADE,related_name='categories',null=True)
-    sum = models.FloatField( default=0)
+    subcategory = models.ForeignKey(SubCategoryCatalog, on_delete=models.CASCADE, related_name='categories', null=True,
+                                    blank=True)
+    sum = models.FloatField(default=0)
     comment = models.TextField()
-

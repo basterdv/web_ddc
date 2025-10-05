@@ -6,12 +6,13 @@ document.getElementById('editModal_catalog').addEventListener('show.bs.modal', f
     const catalog_type = button.getAttribute('data-catalog-type'); //Получаем тип справочника
     const editForm = document.getElementById('editModal_catalog');
 
-    const catalogType = button.getAttribute('data-catalog-type'); //Тип каталога
+    const catalogType = button.getAttribute('data-category-type'); //Тип категории
     const typeSection = editForm.querySelector('#typeSection');
 
-    if (catalogType === '"category"') {
+
+    if (catalog_type === 'category') {
         typeSection.style.display = 'block';
-    }else{
+    } else {
         typeSection.style.display = 'none';
     }
 
@@ -20,6 +21,7 @@ document.getElementById('editModal_catalog').addEventListener('show.bs.modal', f
         .then(response => response.json())
         .then(data => {
             document.getElementById('card_name').value = data.name;
+            document.getElementById('TypeSelect').value = data.types;
         })
         .catch(error => console.error('Ошибка при загрузке данных записи:', error))
 
@@ -27,17 +29,20 @@ document.getElementById('editModal_catalog').addEventListener('show.bs.modal', f
     editForm.addEventListener('submit', function (event) {
         event.preventDefault(); // Предотвращаем стандартное поведение формы
 
+
         // Получаем CSRF токен из формы
         const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
 
         // Получаем данные формы
         const name = document.getElementById('card_name').value;
+        const catalogType = document.getElementById('TypeSelect').value;
 
         // Создаем объект с данными формы
         const formData = {
             name: name,
             card_id_: cardId,
-            catalog_type:catalog_type,
+            catalog_type: catalog_type,
+            categoryTypes:  catalogType,
         };
 
         // Отправляем данные на сервер с использованием Fetch API

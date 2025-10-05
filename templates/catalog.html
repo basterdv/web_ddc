@@ -19,16 +19,14 @@
                         <input type="text" id="card_name" class="form-control" required="">
 
                         <div class="container" id="typeSection" style="display: none">
-                            <div class="border">
-                                <span>Тип</span>
-                                <select id="TypeSelect" name="typefrocategory" class="form-select">
-                                    {% for type in type_db %}
-                                        <option value="{{ type.id }}"
-                                                {% if filters.type == type.id|stringformat:"s" %}selected{% endif %}
-                                        >{{ type.name }}</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
+                            <label for="TypeSelect">Тип</label>
+                            <select id="TypeSelect" name="typefrocategory" class="form-select">
+                                {% for type in type_db %}
+                                    <option value="{{ type.id }}"
+                                            {% if filters.type == type.id|stringformat:"s" %}selected{% endif %}
+                                    >{{ type.name }}</option>
+                                {% endfor %}
+                            </select>
                         </div>
 
 
@@ -40,7 +38,6 @@
                     </button>
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть
                     </button>
-
 
                 </form>
             </div>
@@ -171,7 +168,8 @@
 
                                                 <div class="btn-group">
                                                     <a class="btn btn-sm btn-primary" href="#" data-bs-toggle="modal"
-                                                       data-bs-target="#editModal_catalog" data-catalog-type="category"                                                       
+                                                       data-bs-target="#editModal_catalog" data-catalog-type="category"
+                                                       data-category-type="{{ category.types.id }}"
                                                        data-catalog-id="{{ category.id }}">Изменить</a>
                                                     <button formaction="/catalog_del/" class="btn btn-sm btn-danger"
                                                             name="category_del_form"

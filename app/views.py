@@ -76,63 +76,6 @@ def index(request):
             'subcategory': subcategory
         }
 
-    # Получаем данные из модального окна
-    if request.method == 'POST':
-        try:
-            # Парсим данные из тела запроса
-            data = json.loads(request.body)
-
-            # Получаем объекты по идентификаторам из формы
-            status_id = get_object_or_404(StatusCatalog, id=data['status'])
-            type_id = get_object_or_404(TypeCatalog, id=data['type'])
-            category_id = get_object_or_404(CategoryCatalog, id=data['category'])
-            subcategory_id = get_object_or_404(SubCategoryCatalog, id=data['subcategory'])
-
-            if data['cashflow_id'] != '':
-                # Создаем изменение записи
-                async def ardit_cashflow():
-                    await CashFlow.objects.filter(id=data['cashflow_id']).aupdate(
-                        date=data['date'],
-                        status=status_id,
-                        type=type_id,
-                        category=category_id,
-                        sum=data['amount'],
-                        subcategory=subcategory_id,
-                        comment=data['comment']
-                    )
-
-                # запускаем асинхронную функцию
-                asyncio.run(ardit_cashflow())
-
-            else:
-                # Создаем запись
-                async def acreate_cashflow():
-                    await CashFlow.objects.acreate(
-                        date=data['date'],
-                        status=status_id,
-                        type=type_id,
-                        category=category_id,
-                        sum=data['amount'],
-                        subcategory=subcategory_id,
-                        comment=data['comment']
-                    )
-
-                # запускаем асинхронную функцию
-                asyncio.run(acreate_cashflow())
-
-        except Exception as e:
-            print(f'Ошибка - {e}')
-
-        # Удаляем запись в cashflow
-        if 'del_cashflow_form' in request.POST:
-            cashflow_id = request.POST.get('del_cashflow_form')
-
-            async def adelete_cashflow():
-                await CashFlow.objects.filter(id=cashflow_id).adelete()
-
-            # запускаем асинхронную функцию
-            asyncio.run(adelete_cashflow())
-
     context = {
         'title': 'Веб-сервис для управления движением денежных средств',
         'status_db': status_db,
@@ -146,13 +89,134 @@ def index(request):
     return render(request, 'index.html', context=context)
 
 
-def catalog(request):
-    # Получение записей из справочников
+def get_catalog_objects(data):
+    status_id = get_object_or_404(StatusCatalog, id=data['status'])
+    type_id = get_object_or_404(TypeCatalog, id=data['type'])
+    category_id = get_object_or_404(CategoryCatalog, id=data['category'])
+    if data['subcategory'] != '':
+        subcategory_id = get_object_or_404(SubCategoryCatalog, id=data['subcategory'])
+    else:
+        subcategory_id = None
+    return status_id, type_id, category_id, subcategory_id
+
+
+async def async_create_cashflow(data, status_id, type_id, category_id, subcategory_id):
+    await CashFlow.objects.acreate(
+        date=data['date'],
+        status=status_id,
+        type=type_id,
+        category=category_id,
+        sum=data['amount'],
+        subcategory=subcategory_id,
+        comment=data['comment']
+    )
+
+
+async def async_update_cashflow(data, status_id, type_id, category_id, subcategory_id):
+    await CashFlow.objects.filter(id=data['cashflow_id']).aupdate(
+        date=data['date'],
+        status=status_id,
+        type=type_id,
+        category=category_id,
+        sum=data['amount'],
+        subcategory=subcategory_id,
+        comment=data['comment']
+    )
+
+async def async_delete_cashflow(data):
+    await CashFlow.objects.filter(id=data['cashflow_id']).adelete()
+
+
+
+def get_catalog_data():
     try:
         status_db = StatusCatalog.objects.all()
         type_db = TypeCatalog.objects.all()
-        category_db = CategoryCatalog.objects.select_related('types') .all()
+        category_db = CategoryCatalog.objects.select_related('types').all()
         sub_category_db = SubCategoryCatalog.objects.all()
+    except Exception as e:
+        print('error')
+        status_db = []
+        type_db = []
+        category_db = []
+        sub_category_db = []
+    return status_db, type_db, category_db, sub_category_db
+
+
+def get_catalog_item(catalog_type, card_id):
+    try:
+        if catalog_type == 'status':
+            record = StatusCatalog.objects.get(id=card_id)
+            types = None
+        elif catalog_type == 'type':
+            record = TypeCatalog.objects.get(id=card_id)
+            types = None
+        elif catalog_type == 'category':
+            record = CategoryCatalog.objects.get(id=card_id)
+            types = record.types.id
+        elif catalog_type == 'subcategory':
+            record = SubCategoryCatalog.objects.get(id=card_id)
+            types = None
+        else:
+            record = None
+
+        data = {
+            'id': record.id,
+            'name': record.name,
+            'types': types,
+        }
+
+        return JsonResponse(data, safe=False)
+    except Exception as e:
+        print(f'error - {e}')
+        return JsonResponse({}, safe=False)
+
+
+def create_cashflow(request):
+    # Парсим данные из тела запроса
+    data = json.loads(request.body)
+
+    # Получаем объекты по идентификаторам из формы
+    status_id, type_id, category_id, subcategory_id = get_catalog_objects(data)
+
+    # Создаем запись
+    async def acreate_cashflow():
+        await async_create_cashflow(data, status_id, type_id, category_id, subcategory_id)
+
+    # запускаем асинхронную функцию
+    asyncio.run(acreate_cashflow())
+
+    return redirect('home')
+
+
+def update_cashflow(request):
+    data = json.loads(request.body)
+
+    # Получаем объекты по идентификаторам из формы
+    status_id, type_id, category_id, subcategory_id = get_catalog_objects(data)
+
+    # Создаем изменение записи
+    async def ardit_cashflow():
+        await async_update_cashflow(data, status_id, type_id, category_id, subcategory_id)
+
+
+    # запускаем асинхронную функцию
+    asyncio.run(ardit_cashflow())
+
+    return redirect('home')
+
+async def delete_cashflow(request):
+    item_id = request.POST.get('del_cashflow_form')
+
+    await CashFlow.objects.filter(id=item_id).adelete()
+
+    return redirect('home')
+
+
+def catalog(request):
+    # Получение записей из справочников
+    try:
+        status_db, type_db, category_db, sub_category_db = get_catalog_data()
 
 
     except Exception as e:
@@ -181,7 +245,12 @@ def get_subcategories(request, category_id):
 
 def get_cashflow(request, cashflow_id):
     try:
-        cashflow_db = CashFlow.objects.get(id=cashflow_id)
+        cashflow_db = get_object_or_404(CashFlow.objects, id=cashflow_id)
+
+        if cashflow_db.subcategory_id is not None:
+            subcategory_id = cashflow_db.subcategory.id
+        else:
+            subcategory_id = None
 
         data = {
             'id': cashflow_db.id,
@@ -191,10 +260,11 @@ def get_cashflow(request, cashflow_id):
             'category': cashflow_db.category.id,
             'amount': cashflow_db.sum,
             'comment': cashflow_db.comment,
-            'subcategory': cashflow_db.subcategory.id,
+            'subcategory': subcategory_id,
         }
 
         return JsonResponse(data, safe=False)
+
 
     except Exception as e:
         print(f'error - {e}')
@@ -203,12 +273,14 @@ def get_cashflow(request, cashflow_id):
 
 def get_catalog_edit(request, catalog_type, card_id):
     try:
+        types = None
         if catalog_type == 'status':
             record = StatusCatalog.objects.get(id=card_id)
         elif catalog_type == 'type':
             record = TypeCatalog.objects.get(id=card_id)
         elif catalog_type == 'category':
             record = CategoryCatalog.objects.get(id=card_id)
+            types = record.types.id
         elif catalog_type == 'subcategory':
             record = SubCategoryCatalog.objects.get(id=card_id)
         else:
@@ -217,6 +289,7 @@ def get_catalog_edit(request, catalog_type, card_id):
         data = {
             'id': record.id,
             'name': record.name,
+            'types': types,
         }
 
         return JsonResponse(data, safe=False)
@@ -282,8 +355,14 @@ async def catalog_edit(request):
 
     for form_key, model in catalog_list.items():
         if form_key in data['catalog_type']:
-            await model.objects.filter(id=data['card_id_']).aupdate(
-                name=data["name"],
-            )
+            if form_key == 'category':
+                await model.objects.filter(id=data['card_id_']).aupdate(
+                    name=data["name"],
+                    types_id=data['categoryTypes']
+                )
+            else:
+                await model.objects.filter(id=data['card_id_']).aupdate(
+                    name=data["name"],
+                )
 
     return redirect('catalog')
