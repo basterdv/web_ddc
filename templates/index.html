@@ -18,7 +18,7 @@
                             <h2 class="h5 mb-0">Фильтры</h2>
                         </div>
                         <div class="card-body">
-                            <form method="get" id="form_filter" name="filter_form">
+                            <form method="get" id="form_filter" name="filter_form" action="{% url 'filter_cashflow' %}">
                                 <div class="row">
                                     <!-- Поле начальной даты -->
                                     <div class="col-md-3">
@@ -97,18 +97,21 @@
                 <script>
                     const categorySelect = document.getElementById('category');
                     const subcategorySelect = document.getElementById('subcategory');
+                    const typeSelect = document.getElementById('filterType');
 
-                    categorySelect.addEventListener('change', function () {
-                        const categoryId = this.value;
-
+                    // Функция для обновления подкатегорий
+                    function updateSubcategories(categoryId, type) {
                         if (!categoryId) {
                             subcategorySelect.innerHTML = '<option value="">Сначала выберите категорию</option>';
                             subcategorySelect.disabled = true;
                             return;
                         }
+                        // Формируем URL с учетом типа категории
+                        const url = type ? `/get_subcategories/${categoryId}/${type}` : `/get_subcategories/${categoryId}`;
 
                         // Запрос подкатегорий через AJAX
-                        fetch(`/get_subcategories/${categoryId}`)
+                        {#fetch(`/get_subcategories/${categoryId}`)#}
+                        fetch(url)
                             .then(response => response.json())
                             .then(data => {
                                 subcategorySelect.innerHTML = '';  // Очищаем список
@@ -130,7 +133,66 @@
                                 console.error('Ошибка:', error);
                                 subcategorySelect.innerHTML = '<option value="">Ошибка загрузки</option>';
                             });
+                    }
+
+                    // Обработчик изменения категории
+                    categorySelect.addEventListener('change', function () {
+                        const categoryId = this.value;
+                        const type = typeSelect.value || '';  // Если тип не выбран, используем пустую строку
+                        updateSubcategories(categoryId, type);
                     });
+
+                    // Обработчик изменения типа категории
+                    typeSelect.addEventListener('change', function () {
+                        const categoryId = categorySelect.value;
+                        const type = this.value || '';  // Если тип не выбран, используем пустую строку
+                        updateSubcategories(categoryId, type);
+                    });
+
+
+
+                    {#categorySelect.addEventListener('change', function () {#}
+                    {#    const categoryId = this.value;#}
+
+
+                    // Если тип категории не указан, используем пустую строку
+                    {#const type = typeSelect.value || '';#}
+
+                    {#if (!categoryId) {#}
+                    {#    subcategorySelect.innerHTML = '<option value="">Сначала выберите категорию</option>';#}
+                    {#    subcategorySelect.disabled = true;#}
+                    {#    return;#}
+                    {#}#}
+                        // Формируем URL с учетом типа категории
+                        {#const url = type ? `/get_subcategories/${categoryId}/${type}` : `/get_subcategories/${categoryId}`;#}
+
+                        // Запрос подкатегорий через AJAX
+                        {#fetch(`/get_subcategories/${categoryId}`)#}
+                    {#    fetch(url)#}
+                    {#        .then(response => response.json())#}
+                    {#        .then(data => {#}
+                    {#            subcategorySelect.innerHTML = '';  // Очищаем список#}
+                    {##}
+                    {#            if (data.length === 0) {#}
+                    {#                subcategorySelect.innerHTML = '<option value="">Нет подкатегорий</option>';#}
+                    {#            } else {#}
+                    {#                data.forEach(subcategory => {#}
+                    {#                    const option = document.createElement('option');#}
+                    {#                    option.value = subcategory.id;#}
+                    {#                    option.textContent = subcategory.name;#}
+                    {#                    subcategorySelect.appendChild(option);#}
+                    {#                });#}
+                    {#            }#}
+                    {##}
+                    {#            subcategorySelect.disabled = false;#}
+                    {#        })#}
+                    {#        .catch(error => {#}
+                    {#            console.error('Ошибка:', error);#}
+                    {#            subcategorySelect.innerHTML = '<option value="">Ошибка загрузки</option>';#}
+                    {#        });#}
+                    {#}#}
+                    {#)#}
+                    {#;#}
                 </script>
 
                 <!-- Таблица записей -->

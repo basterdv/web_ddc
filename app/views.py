@@ -7,6 +7,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 
 from .models import StatusCatalog, TypeCatalog, CategoryCatalog, SubCategoryCatalog, CashFlow
 
+
 # главная страница
 def index(request):
     # Получение записей из журнала движения денежных средств
@@ -24,11 +25,25 @@ def index(request):
         category_db = []
         sub_category_db = []
 
+    # Сортировка записей по дате в порядке убывания
+    cashflow_db = cashflow_db.order_by('-date') if cashflow_db else []
+
+    context = {
+        'title': 'Веб-сервис для управления движением денежных средств',
+        'status_db': status_db,
+        'type_db': type_db,
+        'category_db': category_db,
+        'sub_category_db': sub_category_db,
+        'cashflow_db': cashflow_db,
+    }
+    return render(request, 'index.html', context=context)
+
+
+def filter_cashflow(request):
     filter_params = {}
 
     # Получаем GET данные для фильтра
     if request.method == 'GET':
-
         status = request.GET.get('status')
         if status == 'status_all':
             status = None
@@ -53,18 +68,20 @@ def index(request):
             filterEndDate = datetime.strptime(filterEndDate, '%Y-%m-%d')
 
             cashflow_db = CashFlow.objects.filter(date__gte=filterStartDate, date__lte=filterEndDate)
+        else:
+            cashflow_db = CashFlow.objects.all()
 
         if category is not None:
-            cashflow_db = CashFlow.objects.filter(category=category)
+            cashflow_db = cashflow_db.filter(category=category)
 
         if status is not None:
-            cashflow_db = CashFlow.objects.filter(status=status)
+            cashflow_db = cashflow_db.filter(status=status)
 
         if type is not None:
-            cashflow_db = CashFlow.objects.filter(type=type)
+            cashflow_db = cashflow_db.filter(type=type)
 
         if subcategory is not None:
-            subcategory_db = SubCategoryCatalog.objects.filter(subcategory=subcategory)
+            cashflow_db = cashflow_db.filter(subcategory=subcategory)
 
         # Получаем параметры
         filter_params = {
@@ -76,16 +93,18 @@ def index(request):
             'subcategory': subcategory
         }
 
+    # Сортировка записей по дате в порядке убывания
+    cashflow_db = cashflow_db.order_by('-date') if cashflow_db else []
+
     context = {
         'title': 'Веб-сервис для управления движением денежных средств',
-        'status_db': status_db,
-        'type_db': type_db,
+        'status_db': StatusCatalog.objects.all(),
+        'type_db': TypeCatalog.objects.all(),
         'filters': filter_params,
-        'category_db': category_db,
-        'sub_category_db': sub_category_db,
+        'category_db': CategoryCatalog.objects.all(),
+        'sub_category_db': SubCategoryCatalog.objects.all(),
         'cashflow_db': cashflow_db,
     }
-
     return render(request, 'index.html', context=context)
 
 
@@ -171,8 +190,8 @@ def get_catalog_item(catalog_type, card_id):
         print(f'error - {e}')
         return JsonResponse({}, safe=False)
 
-# Добавляем запись
 
+# Добавляем запись
 def create_cashflow(request):
     # Парсим данные из тела запроса
     data = json.loads(request.body)
@@ -189,6 +208,7 @@ def create_cashflow(request):
 
     return redirect('home')
 
+
 # Редактируем запись
 def update_cashflow(request):
     data = json.loads(request.body)
@@ -204,6 +224,7 @@ def update_cashflow(request):
     asyncio.run(ardit_cashflow())
 
     return redirect('home')
+
 
 # Удаляем запись
 async def delete_cashflow(request):
@@ -237,13 +258,14 @@ def catalog(request):
 
     return render(request, 'catalog.html', context=context)
 
-def get_categories_by_type(request,typeId):
+
+def get_categories_by_type(request, typeId):
     categories = CategoryCatalog.objects.filter(types_id=typeId)
     categories_list = [{'id': category.id, 'name': category.name} for category in categories]
     return JsonResponse(categories_list, safe=False)
 
 
-def get_subcategories(request, category_id):
+def get_subcategories(request, category_id,type):
     subcategories = SubCategoryCatalog.objects.filter(category_id=category_id)
     subcategories_list = [{'id': subcategory.id, 'name': subcategory.name} for subcategory in subcategories]
     return JsonResponse(subcategories_list, safe=False)
